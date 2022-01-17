@@ -1,0 +1,165 @@
+2100
+action
+    - huge plane
+    - 1 man + 8 robots firingsquad
+    - ocean factory + speedboat
+    - forge
+    - train + hacking + freight 
+    - sewers + speedboat
+    - 
+    - 
+
+
+
+
+concepts
+    - regional networks    renet
+    - cloud AI
+    - controls
+    - public school
+    - robots
+    - agriculture
+    - solar power
+    - 
+
+scifi
+    school
+        - AI trainers
+        - 5 people classes
+        - VR
+    
+    agriculture
+        - robots
+        - gen manipulated crops
+        - biodiversity -> complex patterns
+        - huge farms
+        
+    military
+        - robots
+        - flying drones
+        - AR goggles
+        - AI network
+        - cloaking -> Quantum dots
+        - smart guns
+        - exosceletons
+        - 
+    
+    architecture
+        - 3d printing
+        - art nouveau
+        - 50s retrofuturism
+        - color changing fasades
+        - fast buildings
+        - fusion reactors
+        - denser, higher
+    
+    consumer tech
+        - phones similar -> lightweight carbon fiber
+        - AR glasses
+        - 
+    
+    food
+        - lab meat
+        - 3d printed stuff
+        - chimera products
+        - 
+
+    transportation
+        - color chaning cars, streets
+        - self driving
+        - one wheelers
+        - no more car ownership
+        - hydrogen busses, trains -> noise cancelling, screens
+        - 
+
+    
+    entertainment
+        - AR themeparks
+        - unique cinema
+        - robot live stunt performances -> monster truck rallies with giant robots
+        - VR networks
+        - internet continental
+        - emergent games
+        - games regulation
+        - public executions -> extreme high power microwaves 
+        -
+    
+    religion
+        - AI god
+        - naturalists -> nordic
+        - christian traditionalists
+    
+    space
+        - still limited
+        - solar plants
+        - hotels
+        - asteroid mining
+        - abandoned science stations
+        - HUGE telescopes
+        - Jupiter flyby
+
+    environment
+        - reforestation
+    
+    crime
+        - hacker
+        - black coins
+        - weapons
+        - information
+        - killers
+        - forgery
+        - smuggeling
+    
+    politics
+        - AI supervised
+        - participative
+        - collectivist
+        - 
+    
+    economy
+        - sustainability
+        - blockchain based
+        - microtaxasion
+        - post growth economy
+        - self sustaining continents
+        - hand labour -> supervision, 
+        - 1 man companies
+        - 
+    
+    social
+        - collectivism
+        - performance enhancing drugs (regulated)
+        - civic duties -> controls
+        - 
+
+
+EU
+    - region based 
+    - Germany, France, Spain, Netherlands, CH, nordic -> collectivist
+    - Italian fascist with a twist 
+    - civil war in the easts
+    - ring based NEU
+    - english main language
+    - 
+
+Russa
+    - eastern parts annexed by China -> officially souverain
+    - 
+
+US 
+    - More federalist
+    - southern autocracies
+    - 
+
+Africa
+    - West Africa renaissance
+    - east Africa civil wars, proxy wars
+    - 
+
+China
+    - surveillance dictatorship
+    - instable
+
+
+India
+    - chaos

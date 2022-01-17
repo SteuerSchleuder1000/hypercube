@@ -1,6 +1,8 @@
 var camera, scene, renderer, geometry, material, mesh;
 
 var vertices
+var faces = []
+let ffaces = {}
 
 let u0 = 0
 let isPaused = false
@@ -15,7 +17,7 @@ let isMouseDown = false
 let clickPosition = {x: 0, y: 0, phi: 0, theta: 0}
 let cameraPos = {phi: 0, theta: 0}
 let f_angle = 0.01
-
+let renderWidth = 1;
 
 
 
@@ -53,7 +55,7 @@ let click_up = (e)=> {
 
 let slider = (e)=> {
     let val = parseFloat(e.target.value)
-    u0 = width*(val/100 - 0.5)
+    // u0 = width*(val/100 - 0.5)
     // set val
 }
 
@@ -179,6 +181,7 @@ let dot = (v1, v2)=> {
     return v
 }
 
+// 3d cross product
 let cross = (v1, v2)=> {
     let v = [
         v1[1]*v2[2]-v1[2]*v2[1],
@@ -194,12 +197,14 @@ let cross = (v1, v2)=> {
     return v
 }
 
-let v_v = (v1, v2)=> {
+// returns v1 - v2
+let v_v = (v1, v2)=> { 
     let v = []
     for (let i=0; i< v1.length; i++) { v.push(v1[i]-v2[i]) }
     return v
 }
 
+// matrix multiplication
 let mxm = (a, b) => {
     let aNumRows = a.length, aNumCols = a[0].length,
         bNumRows = b.length, bNumCols = b[0].length,
@@ -252,65 +257,69 @@ let rotZU=     [[1, 0, 0, 0],
                 [0, 0, Math.sin(a), Math.cos(a)]]
 
 
-let rot = [rotXY, rotXZ, rotYZ, rotXU, rotYU, rotZU]
+let rotation = [rotXY, rotXZ, rotYZ, rotXU, rotYU, rotZU]
 let rotateAxis = [false, false, false, false, false, false]
 let rotNames = ['XY', 'XZ', 'YZ', 'XU', 'YU', 'ZU']
 
+// onRotationButtonClick
 let rotClick = (e)=>{
     let idx = rotNames.indexOf(e.target.id)
     rotateAxis[idx] = !rotateAxis[idx]
     e.target.classList.toggle("highlighted");
 }
+
 for (let _id of rotNames) { document.getElementById(_id).onclick = rotClick }
 
+// check if two 4d points cross u = u0 and return point at u = u0
+let checkPoint = (p1, p2)=> { 
+    if (p1[3] == u0 && p2[3] == u0){ return true}
+    if ((p1[3] <u0) == (p2[3] <u0)) { return false }
+
+    let d = (p1[3]-u0)/(p1[3]-p2[3])
+    let p12 = [p1[0] + d*(p2[0]-p1[0]),
+            p1[1] + d*(p2[1]-p1[1]),
+            p1[2] + d*(p2[2]-p1[2]),
+            u0]
+    return p12
+}
+
+let checkCell = (cell)=> {
+    let delta = 0
+    let isPos = tesseract[cell[0]][3] > delta
+    for (let p of cell) {
+        if ((tesseract[p][3] > delta) != isPos && tesseract[p][3] != 0) { return true }
+    }
+    return false
+}
+
+
+
+
+// calculate normalized cross product
+let calcN = (v1, v2)=>{
+    let n = cross(v1, v2)
+    let d = v_length(n)
+    if (d == 0) { return 0}
+    for (let i=0; i<3; i++) {
+        n[i] = (n[i]/d)
+    }
+    return n
+}
+
+let superLog = false;
 let temp = null
 let addGeometry = () => {
 
     if (mesh) { scene.remove(mesh)}
 
 
-    let check = (p1, p2)=> { 
-        if (p1[3] == u0 && p2[3] == u0){ return true}
-        if ((p1[3] <u0) == (p2[3] <u0)) { return false }
-
-        let d = p1[3]/(p1[3]-p2[3])
-        let p12 = [p1[0] + d*(p2[0]-p1[0]),
-                p1[1] + d*(p2[1]-p1[1]),
-                p1[2] + d*(p2[2]-p1[2]),
-                u0]
-        return p12
-    }
-
-    let checkCell = (cell)=> {
-        let delta = 0
-        let isPos = tesseract[cell[0]][3] > delta
-        for (let p of cell) {
-            if ((tesseract[p][3] > delta) != isPos && tesseract[p][3] != 0) { return true }
-        }
-        return false
-    }
-
     
-
-    
-
-    let calcN = (v1, v2)=>{
-        let n = cross(v1, v2)
-        let d = v_length(n)
-        if (d == 0) { return 0}
-        // for (let i in n) { 
-        for (let i=0; i<3; i++) {
-            n[i] = (n[i]/d)
-        }
-        return n
-    }
-
 
     points = []
     vertices = []
+    faces = []
 
     geometry = new THREE.Geometry()
-
 
     // cell wise
 
@@ -319,51 +328,63 @@ let addGeometry = () => {
 
         let cell = cells[i]
         let points = []
-        let faces = []
+        
 
 
         // check all vertex connections of cell (8 vertices -> 12 connections)
+        // check first level idx [0...3]
         for (let j=0; j<4; j++) {
             let idx1 = cell[j]
             let idx2 = cell[(j+1)%4]
-            let pt = check(tesseract[idx1], tesseract[idx2])
+            let pt = checkPoint(tesseract[idx1], tesseract[idx2])
             if (pt == true) { points.push(tesseract[idx1], tesseract[idx2]) }
             else if (pt != false) { points.push(pt)}
         }
 
+        // check second level idx [4...7]
         for (let j=0; j<4; j++) {
             let idx1 = cell[j+4]
             let idx2 = cell[(j+1)%4 + 4]
-            let pt = check(tesseract[idx1], tesseract[idx2])
+            let pt = checkPoint(tesseract[idx1], tesseract[idx2])
             if (pt == true) { points.push(tesseract[idx1], tesseract[idx2]) }
             else if (pt != false) { points.push(pt)}
         }
 
+        // check level connections
         for (let j=0; j<4; j++) { 
             let idx1 = cell[j]
             let idx2 = cell[j+4]
-            let pt = check(tesseract[idx1], tesseract[idx2])
+            let pt = checkPoint(tesseract[idx1], tesseract[idx2])
             if (pt == true) { points.push(tesseract[idx1], tesseract[idx2]) }
             else if (pt != false) { points.push(pt)}
         }
 
         
-
+        const numPoints = points.length;
         let center = [0, 0, 0, 0] // calculate center point of area
-        let l = points.length
         for (let p of points) {
-            for (let i in p) { center[i] += p[i]/l }
+            for (let i in p) { center[i] += p[i]/numPoints }
         }
 
 
         // sorting points clockwise around center
-        let n = calcN(v_v(points[0], center), v_v(points[1], center))
-        if (n == 0) { n = calcN(v_v(points[0], center), v_v(points[2], center)) }
+        // let n = calcN(v_v(points[0], center), v_v(points[1], center)) // normalized 3d crossproduct 
+        // if (n == 0) { n = calcN(v_v(points[0], center), v_v(points[2], center)) }
 
-        let minVal = 1e-10
+        // sorting points clockwise around center
+        let n = 0;
+        let j = 1;
+        while (n==0) {
+            if (j > points.length-1 ) { console.log('error'); return; }
+            n = calcN(v_v(points[0], center), v_v(points[j], center));
+            j += 1;
+        }
+
+        let minVal = 1e-28 // epsilon
         let sortClockwise = (v1, v2)=>{
             let c = cross(v_v(v1, center), v_v(v2, center))
             let d = dot(n, c)
+            if (superLog) console.log(d, 'v1', v1, 'v2', v2);
             // if (Math.abs(d) < 1e-10) { d = 0}
             // if (i == 5) {console.log(colorNames[i],d, n, c)}
             
@@ -374,8 +395,54 @@ let addGeometry = () => {
                 return 0
             }   
         }
-        points.sort(sortClockwise)
 
+        let xAxis = v_v(points[0], center)
+        let lx = v_length(xAxis)
+        let yAxis = cross(n, xAxis)
+        let sort2 = (v1, v2)=>{
+            let x1 = dot(v1, xAxis)
+            let y1 = dot(v1, yAxis)
+            let a1 = Math.atan2(y1,x1)
+
+            let x2 = dot(v2, xAxis)
+            let y2 = dot(v2, yAxis)
+            let a2 = Math.atan2(y2,x2)
+
+            return a1-a2
+        }
+
+        
+        let sort3 = (v1, v2)=>{
+            let v11 = v_v(v1, center)
+            let v22 = v_v(v2, center)
+            let theta1 = Math.acos(dot(v11, xAxis)/(v_length(v11)*lx))
+            let theta2 = Math.acos(dot(v22, xAxis)/(v_length(v22)*lx))
+            // console.log(theta1, theta2)
+            return theta2 - theta1
+        }
+
+
+        // points.sort(sort3)
+        // points.sort(sortClockwise)
+
+        let points_new = [points[0]]
+        for (let x=0; x < numPoints; x++) {
+            let p1 = points[x];
+            let m = {value: 100000000, idx: -1}
+            for (let y=0; y < points.length; y++) {
+                if (x==y) {continue}
+                let p2 = points[y]
+                let d = Math.abs(v_length(v_v(p1, p2)))-Number.EPSILON
+                if (d < m.value && !(p2 in points_new)) {
+                    m = {value: d+Number.EPSILON, idx: y}
+                }
+            }
+            points_new.push(points[m.idx])
+        }
+        // console.log(points_new)
+
+        for (let j in points) { points[j] = points_new[j] }
+        // points = points_new
         // let points_sorted = [points[0]]
         // let idx = 0
         // while( points_sorted.length < points.length)  {
@@ -421,41 +488,36 @@ let addGeometry = () => {
 
 
         
-        let idx0 = vertices.length // first idx of points
-        let width = 1
-        vertices.push(new THREE.Vector3(center[0]*width, center[1]*width, center[2]*width))
+        let idx0 = vertices.length // first idx of points = center
+        // let width = WIDTH // render_width
+        vertices.push(new THREE.Vector3(center[0]*renderWidth, center[1]*renderWidth, center[2]*renderWidth))
         
-
-        for (let j=0; j< points.length; j++) {
+        ffaces[colorNames[i]] = []
+        ffaces['v_'+i] = []
+        for (let j=0; j< numPoints; j++) {
             let p = points[j]
-            let v = new THREE.Vector3(p[0]*width,p[1]*width, p[2]*width)
+            let v = new THREE.Vector3(p[0]*renderWidth,p[1]*renderWidth, p[2]*renderWidth)
             vertices.push(v)
 
             
             let idx1 = idx0+1+j
-            let idx2 = idx0+1+(j+1)%points.length
+            let idx2 = idx0+1+(j+1)%numPoints
             
 
             let face = new THREE.Face3(idx0, idx1, idx2)
+            face['colorName'] = colorNames[i]
             face.color = new THREE.Color(colors[i])
             faces.push(face)
             geometry.faces.push(face)
 
+            ffaces[colorNames[i]].push(face)
         }
 
-        // if (i == 1) {
-        //     // green cell
-        //     console.log('green',center, n, points, faces)
-        //     temp = clone(points)
-        // }
-
-        // if (i == 6) {
-        //     console.log('red',center,n, points, faces)
-        // }
 
     } // cells
 
     geometry.vertices = vertices
+    geometry.faces = faces
     
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
@@ -546,7 +608,7 @@ function animate() {
 
     if (!isPaused) {
         for (let i=0; i<6; i++) {
-            if (rotateAxis[i]) {tesseract = mxm(tesseract, rot[i])}
+            if (rotateAxis[i]) {tesseract = mxm(tesseract, rotation[i])}
         }
         // rotation function ([axis], [degree])
         // tesseract = mxm(tesseract, rot[axis])
